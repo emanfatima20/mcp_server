@@ -20,6 +20,7 @@ DB_PATH = os.path.join(BASE_DIR, "expenses.db")
 # -------------------------------------------------
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
+        # Enable WAL for concurrency
         await db.execute("PRAGMA journal_mode=WAL;")
         await db.execute("""
             CREATE TABLE IF NOT EXISTS expenses (
@@ -34,10 +35,6 @@ async def init_db():
         await db.commit()
 
     print(f"[INIT] DB initialized at {DB_PATH}", file=sys.stderr)
-
-# Run once at startup
-import asyncio
-asyncio.run(init_db())
 
 # -------------------------------------------------
 # ADD EXPENSE
@@ -98,8 +95,7 @@ async def list_expenses() -> dict:
                 "sub_category": r[3],
                 "date": r[4],
                 "created_at": r[5]
-            }
-            for r in rows
+            } for r in rows
         ]
     }
 
@@ -137,10 +133,7 @@ async def update_expense(
     values.append(expense_id)
 
     async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            f"UPDATE expenses SET {', '.join(fields)} WHERE id = ?",
-            values
-        )
+        await db.execute(f"UPDATE expenses SET {', '.join(fields)} WHERE id = ?", values)
         await db.commit()
 
     return {"status": "success", "updated_fields": fields}
@@ -179,8 +172,10 @@ async def summarize_expenses(start_date: str, end_date: str) -> dict:
 # RUN SERVER
 # -------------------------------------------------
 if __name__ == "__main__":
+    # Use `startup=init_db` instead of asyncio.run()
     mcp.run(
         transport="http",
         host="0.0.0.0",
-        port=8000
+        port=8000,
+        startup=init_db
     )
