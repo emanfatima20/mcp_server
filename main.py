@@ -171,19 +171,11 @@ async def summarize_expenses(start_date: str, end_date: str) -> dict:
 # -------------------------------------------------
 # RUN SERVER
 # -------------------------------------------------
-# if __name__ == "__main__":
-#     # Use `startup=init_db` instead of asyncio.run()
-#     mcp.run(
-#         transport="http",
-#         host="0.0.0.0",
-#         port=8000,
-#         startup=init_db
-#     )
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
+    # Use `startup=init_db` instead of asyncio.run()
     mcp.run(
         transport="http",
         host="0.0.0.0",
-        port=port,
+        port=8000,
         startup=init_db
     )
